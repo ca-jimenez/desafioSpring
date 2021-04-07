@@ -10,22 +10,29 @@ import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Repository
 public class ArticleRepositoryImpl implements ArticleRepository {
 
     private List<ArticleDTO> catalog;
 
-    private AtomicInteger idCounter = new AtomicInteger(1);
+    private AtomicLong idCounter = new AtomicLong(1);
 
     public ArticleRepositoryImpl() {
         catalog = loadDatabase();
     }
 
     @Override
-    public List<ArticleDTO> getProductList() {
+    public List<ArticleDTO> getArticleList() {
         return catalog;
+    }
+
+    @Override
+    public ArticleDTO getArticleById(Long id) {
+       return catalog.stream().filter(a -> a.getProductId().equals(id)).findFirst().orElse(null);
     }
 
     private List<ArticleDTO> loadDatabase() {
@@ -53,7 +60,8 @@ public class ArticleRepositoryImpl implements ArticleRepository {
 
                 Integer quantity = Integer.parseInt(data[4]);
                 Boolean freeShipping = data[5].equals("SI");
-                String prestige = data[6];
+//                String prestige = data[6];
+                Integer prestige = data[6].length();
 
                 records.add(new ArticleDTO(idCounter.getAndIncrement(), name, category, brand, price, quantity, freeShipping, prestige));
 
