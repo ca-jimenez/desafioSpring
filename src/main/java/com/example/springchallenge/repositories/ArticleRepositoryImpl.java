@@ -6,13 +6,12 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Repository;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 @Repository
 public class ArticleRepositoryImpl implements ArticleRepository {
@@ -33,6 +32,30 @@ public class ArticleRepositoryImpl implements ArticleRepository {
     @Override
     public ArticleDTO getArticleById(Long id) {
        return catalog.stream().filter(a -> a.getProductId().equals(id)).findFirst().orElse(null);
+    }
+
+    @Override
+    public void subtractStock(Long id, Integer quantity) {
+        catalog.get(id.intValue() - 1).subtractQuantity(quantity);
+    }
+
+    @Override
+    public void updateDatabase() {
+
+        String recordAsCsv = catalog.stream()
+                .map(ArticleDTO::toCsvRow)
+                .collect(Collectors.joining(System.getProperty("line.separator")));
+
+        try {
+            FileWriter writer = new FileWriter("src/main/resources/dbProductos.csv");
+
+            writer.append("name,category,brand,price,quantity,freeShipping,prestige\n");
+            writer.append(recordAsCsv);
+            writer.flush();
+            writer.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private List<ArticleDTO> loadDatabase() {

@@ -1,17 +1,24 @@
 package com.example.springchallenge.services;
 
 import com.example.springchallenge.dtos.*;
+import com.example.springchallenge.exceptions.InsufficientStockException;
+import com.example.springchallenge.exceptions.InvalidArticleException;
 import com.example.springchallenge.exceptions.InvalidFilterException;
 import com.example.springchallenge.exceptions.NoMatchesException;
 import com.example.springchallenge.repositories.ArticleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class ArticleServiceImpl implements ArticleService {
@@ -57,29 +64,51 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public PurchaseResponseDTO PurchaseArticles(PurchaseRequestDTO articles) {
+    public PurchaseResponseDTO PurchaseArticles(PurchaseRequestDTO articles) throws Exception {
 
         List<PurchaseArticleDTO> articleList = articles.getArticles();
 
         long total = 0L;
 
-        //ToDo validate received product data
-        //ToDo article not found
         for (PurchaseArticleDTO article : articleList) {
+
+            if (article.getQuantity() < 1) {
+                throw new InvalidArticleException("Quantity for article with product id " + article.getProductId() + " is invalid");
+            }
 
             ArticleDTO itemInStock = articleRepository.getArticleById(article.getProductId());
 
+            if (itemInStock == null) {
+                throw new InvalidArticleException("Article with product id " + article.getProductId() + " is invalid");
+            }
+
+            validateArticle(article, itemInStock);
+
             if (article.getQuantity() > itemInStock.getQuantity()) {
-                //ToDo not enough stock
+                throw new InsufficientStockException("Stock available for article with product id " + itemInStock.getProductId() + " is " + itemInStock.getQuantity());
             }
 
             total += (article.getQuantity() * (long) itemInStock.getPrice());
         }
 
+        for (PurchaseArticleDTO article : articleList) {
+            articleRepository.subtractStock(article.getProductId(), article.getQuantity());
+        }
+
+        articleRepository.updateDatabase();
+
         TicketDTO ticket = new TicketDTO(ticketIdCounter.getAndIncrement(), articleList, total);
         StatusDTO status = new StatusDTO(200, "La solicitud de compra se completó con éxito");
 
         return new PurchaseResponseDTO(ticket, status);
+    }
+
+    private void validateArticle(PurchaseArticleDTO reqArticle, ArticleDTO catalogArticle) throws InvalidArticleException {
+
+        if (!reqArticle.getName().equals(catalogArticle.getName())
+                || !reqArticle.getBrand().equals(catalogArticle.getBrand())) {
+            throw new InvalidArticleException("Invalid article data. Product id: " + reqArticle.getProductId());
+        }
     }
 
     private void validateFilters(Map<String, String> filterList) throws Exception {
@@ -104,7 +133,7 @@ public class ArticleServiceImpl implements ArticleService {
                     Integer.parseInt(filter.getValue());
 
                 } catch (NumberFormatException e) {
-                    throw new InvalidFilterException("Price, prestige and order filters accept only numeric values");
+                    throw new InvalidFilterException(key + " filter accepts only numeric values");
                 }
             }
 
@@ -247,4 +276,34 @@ public class ArticleServiceImpl implements ArticleService {
         }
         return sorted;
     }
+
+    //--------------------
+
+//    public String convertToCSV(String[] data) {
+////        return String.join(",", data);
+//        return Stream.of(data)
+//                .map(this::escapeSpecialCharacters)
+//                .collect(Collectors.joining(","));
+//    }
+//
+//    public String escapeSpecialCharacters(String data) {
+//        String escapedData = data.replaceAll("\\R", " ");
+//        if (data.contains(",") || data.contains("\"") || data.contains("'")) {
+//            data = data.replace("\"", "\"\"");
+//            escapedData = "\"" + data + "\"";
+//        }
+//        return escapedData;
+//    }
+
+
+//
+//    public void givenDataArray_whenConvertToCSV_thenOutputCreated(List<String[]> dataLines) throws IOException {
+//        File csvOutputFile = new File("copy.csv");
+//        try (PrintWriter pw = new PrintWriter(csvOutputFile)) {
+//            dataLines.stream()
+//                    .map(this::convertToCSV)
+//                    .forEach(pw::println);
+//        }
+////        assertTrue(csvOutputFile.exists());
+//    }
 }
