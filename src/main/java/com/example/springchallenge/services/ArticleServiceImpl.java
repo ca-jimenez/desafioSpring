@@ -4,21 +4,16 @@ import com.example.springchallenge.dtos.*;
 import com.example.springchallenge.exceptions.InsufficientStockException;
 import com.example.springchallenge.exceptions.InvalidArticleException;
 import com.example.springchallenge.exceptions.InvalidFilterException;
-import com.example.springchallenge.exceptions.NoMatchesException;
 import com.example.springchallenge.repositories.ArticleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
 
 @Service
 public class ArticleServiceImpl implements ArticleService {
@@ -55,8 +50,9 @@ public class ArticleServiceImpl implements ArticleService {
 //            return filterArticles(catalog, name, category, brand, price, freeShipping, prestige);
             return filterArticles(catalog, allFilters);
 
-        } else if (allFilters.size() > 2) {
-
+        } else if (allFilters.size() > 2 && allFilters.get("order") == null
+                || allFilters.size() > 3) {
+            
             throw new InvalidFilterException("A maximum of 2 filters can be applied at the same time");
         } else {
             return catalog;

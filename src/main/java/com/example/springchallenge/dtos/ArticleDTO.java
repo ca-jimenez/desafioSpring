@@ -4,9 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -22,7 +19,6 @@ public class ArticleDTO {
     //    private String prestige;
     private Integer prestige;
 
-    //-----------------
 
     public void subtractQuantity(Integer quantity) {
         this.quantity -= quantity;
