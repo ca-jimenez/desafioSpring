@@ -18,9 +18,9 @@ import java.util.stream.Collectors;
 @Service
 public class ArticleServiceImpl implements ArticleService {
 
-    private ArticleRepository articleRepository;
+    private final ArticleRepository articleRepository;
 
-    private AtomicLong ticketIdCounter = new AtomicLong(1);
+    private final AtomicLong ticketIdCounter = new AtomicLong(1);
 
     @Autowired
     public ArticleServiceImpl(ArticleRepository articleRepository) {
@@ -44,6 +44,7 @@ public class ArticleServiceImpl implements ArticleService {
         } else if (allFilters.size() <= 2
                 || (allFilters.size() == 3 && allFilters.get("order") != null)) {
 
+            // Validate value of non-string filters
             validateFilters(allFilters);
 
             return filterArticles(catalog, allFilters);
@@ -72,6 +73,7 @@ public class ArticleServiceImpl implements ArticleService {
                 throw new InvalidArticleException("Article with product id " + article.getProductId() + " is invalid");
             }
 
+            // Validate name and brand for article ID
             validateArticle(article, itemInStock);
 
             if (article.getQuantity() > itemInStock.getQuantity()) {
@@ -81,6 +83,7 @@ public class ArticleServiceImpl implements ArticleService {
             total += (article.getQuantity() * (long) itemInStock.getPrice());
         }
 
+        // Update catalog stock
         for (PurchaseArticleDTO article : articleList) {
             articleRepository.subtractStock(article.getProductId(), article.getQuantity());
         }
@@ -95,8 +98,8 @@ public class ArticleServiceImpl implements ArticleService {
 
     private void validateArticle(PurchaseArticleDTO reqArticle, ArticleDTO catalogArticle) throws InvalidArticleException {
 
-        if (!reqArticle.getName().equals(catalogArticle.getName())
-                || !reqArticle.getBrand().equals(catalogArticle.getBrand())) {
+        if (!reqArticle.getName().equalsIgnoreCase(catalogArticle.getName())
+                || !reqArticle.getBrand().equalsIgnoreCase(catalogArticle.getBrand())) {
             throw new InvalidArticleException("Invalid article data. Product id: " + reqArticle.getProductId());
         }
     }
@@ -106,17 +109,6 @@ public class ArticleServiceImpl implements ArticleService {
         for (Map.Entry<String, String> filter : filterList.entrySet()) {
 
             String key = filter.getKey();
-
-            if (!key.equals("name")
-                    && !key.equals("category")
-                    && !key.equals("price")
-                    && !key.equals("brand")
-                    && !key.equals("freeShipping")
-                    && !key.equals("prestige")
-                    && !key.equals("order")) {
-
-                throw new InvalidFilterException("Accepted filters are: name, category, price, brand, freeShipping, prestige and order");
-            }
 
             if (key.equals("price") || key.equals("prestige") || key.equals("order")) {
                 try {
@@ -138,42 +130,37 @@ public class ArticleServiceImpl implements ArticleService {
 
     private List<ArticleDTO> filterArticles(List<ArticleDTO> catalog, Map<String, String> filters) throws Exception {
 
-        String name = filters.get("name");
-        String category = filters.get("category");
-        String brand = filters.get("brand");
-        Integer price = filters.get("price") != null ? Integer.parseInt(filters.get("price")) : null;
-        Boolean freeShipping = filters.get("freeShipping") != null ? filters.get("freeShipping").equals("true") : null;
-        Integer prestige = filters.get("prestige") != null ? Integer.parseInt(filters.get("prestige")) : null;
-        Integer order = filters.get("order") != null ? Integer.parseInt(filters.get("order")) : null;
+        for (Map.Entry<String, String> filter : filters.entrySet()) {
 
-        if (name != null) {
-            catalog = filterByName(catalog, name);
+            String key = filter.getKey();
+            String value = filter.getValue();
+
+            switch (key) {
+                case "name":
+                    catalog = filterByName(catalog, value);
+                    break;
+                case "category":
+                    catalog = filterByCategory(catalog, value);
+                    break;
+                case "brand":
+                    catalog = filterByBrand(catalog, value);
+                    break;
+                case "price":
+                    catalog = filterByPrice(catalog, Integer.parseInt(value));
+                    break;
+                case "freeShipping":
+                    catalog = filterByShipping(catalog, value.equals("true"));
+                    break;
+                case "prestige":
+                    catalog = filterByPrestige(catalog, Integer.parseInt(value));
+                    break;
+                case "order":
+                    catalog = sortArticles(catalog, Integer.parseInt(value));
+                    break;
+                default:
+                    throw new InvalidFilterException("Filter '" + key + "' is invalid");
+            }
         }
-
-        if (category != null) {
-            catalog = filterByCategory(catalog, category);
-        }
-
-        if (brand != null) {
-            catalog = filterByBrand(catalog, brand);
-        }
-
-        if (price != null) {
-            catalog = filterByPrice(catalog, price);
-        }
-
-        if (freeShipping != null) {
-            catalog = filterByShipping(catalog, freeShipping);
-        }
-
-        if (prestige != null) {
-            catalog = filterByPrestige(catalog, prestige);
-        }
-
-        if (order != null) {
-            catalog = sortArticles(catalog, order);
-        }
-
         return catalog;
     }
 
@@ -221,24 +208,17 @@ public class ArticleServiceImpl implements ArticleService {
 
     private List<ArticleDTO> sortArticles(List<ArticleDTO> catalog, Integer order) throws InvalidFilterException {
 
-        List<ArticleDTO> sorted;
-
         switch (order) {
             case 0:
-                sorted = catalog.stream().sorted(Comparator.comparing(ArticleDTO::getName)).collect(Collectors.toList());
-                break;
+                return catalog.stream().sorted(Comparator.comparing(ArticleDTO::getName)).collect(Collectors.toList());
             case 1:
-                sorted = catalog.stream().sorted((a, b) -> b.getName().compareToIgnoreCase(a.getName())).collect(Collectors.toList());
-                break;
+                return catalog.stream().sorted((a, b) -> b.getName().compareToIgnoreCase(a.getName())).collect(Collectors.toList());
             case 2:
-                sorted = catalog.stream().sorted((a, b) -> b.getPrice() - a.getPrice()).collect(Collectors.toList());
-                break;
+                return catalog.stream().sorted((a, b) -> b.getPrice() - a.getPrice()).collect(Collectors.toList());
             case 3:
-                sorted = catalog.stream().sorted(Comparator.comparingInt(ArticleDTO::getPrice)).collect(Collectors.toList());
-                break;
+                return catalog.stream().sorted(Comparator.comparingInt(ArticleDTO::getPrice)).collect(Collectors.toList());
             default:
                 throw new InvalidFilterException("Order filter accepted values: 0-3");
         }
-        return sorted;
     }
 }

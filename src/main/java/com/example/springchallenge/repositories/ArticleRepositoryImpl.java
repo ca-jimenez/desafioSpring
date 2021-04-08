@@ -18,7 +18,7 @@ public class ArticleRepositoryImpl implements ArticleRepository {
 
     private List<ArticleDTO> catalog;
 
-    private AtomicLong idCounter = new AtomicLong(1);
+    private final AtomicLong idCounter = new AtomicLong(1);
 
     public ArticleRepositoryImpl() {
         catalog = loadDatabase();
@@ -31,10 +31,10 @@ public class ArticleRepositoryImpl implements ArticleRepository {
 
     @Override
     public ArticleDTO getArticleById(Long id) {
-       return catalog.stream()
-               .filter(a -> a.getProductId().equals(id))
-               .findFirst()
-               .orElse(null);
+        return catalog.stream()
+                .filter(a -> a.getProductId().equals(id))
+                .findFirst()
+                .orElse(null);
     }
 
     @Override
@@ -42,6 +42,7 @@ public class ArticleRepositoryImpl implements ArticleRepository {
         getArticleById(id).subtractQuantity(quantity);
     }
 
+    //Overwrite csv file with updated catalog data
     @Override
     public void updateDatabase() {
 
@@ -50,9 +51,13 @@ public class ArticleRepositoryImpl implements ArticleRepository {
                 .collect(Collectors.joining(System.getProperty("line.separator")));
 
         try {
+            // File path
             FileWriter writer = new FileWriter("src/main/resources/dbProductos.csv");
 
+            // Add headers
             writer.append("name,category,brand,price,quantity,freeShipping,prestige\n");
+
+            // Add content
             writer.append(recordAsCsv);
             writer.flush();
             writer.close();
@@ -61,6 +66,7 @@ public class ArticleRepositoryImpl implements ArticleRepository {
         }
     }
 
+    // Parse csv file data
     private List<ArticleDTO> loadDatabase() {
 
         List<ArticleDTO> records = new ArrayList<>();
@@ -72,6 +78,7 @@ public class ArticleRepositoryImpl implements ArticleRepository {
 
             String row;
 
+            // Skip headers
             reader.readLine();
 
             while ((row = reader.readLine()) != null) {
@@ -86,11 +93,9 @@ public class ArticleRepositoryImpl implements ArticleRepository {
 
                 Integer quantity = Integer.parseInt(data[4]);
                 Boolean freeShipping = data[5].equals("SI");
-//                String prestige = data[6];
                 Integer prestige = data[6].length();
 
                 records.add(new ArticleDTO(idCounter.getAndIncrement(), name, category, brand, price, quantity, freeShipping, prestige));
-
             }
             reader.close();
 

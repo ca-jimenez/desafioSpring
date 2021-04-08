@@ -16,25 +16,12 @@ import java.util.Map;
 @RequestMapping("/api/v1")
 public class ArticleController {
 
-    private ArticleService articleService;
+    private final ArticleService articleService;
 
     @Autowired
     public ArticleController(ArticleService articleService) {
         this.articleService = articleService;
     }
-
-//    @GetMapping("/articles")
-//    public ResponseEntity<List<ArticleDTO>> getArticles(
-//            @RequestParam Map<String, String> allFilters,
-//            @RequestParam(required = false, name = "name") String name,
-//            @RequestParam(required = false, name = "category") String category,
-//            @RequestParam(required = false, name = "brand") String brand,
-//            @RequestParam(required = false, name = "price") Integer price,
-//            @RequestParam(required = false, name = "freeShipping") Boolean freeShipping,
-//            @RequestParam(required = false, name = "prestige") Integer prestige) throws Exception {
-//
-//            return new ResponseEntity<>(articleService.getArticles(allFilters, name, category, brand, price, freeShipping, prestige), HttpStatus.OK);
-//    }
 
     @GetMapping("/articles")
     public ResponseEntity<List<ArticleDTO>> getArticles(@RequestParam Map<String, String> allFilters) throws Exception {

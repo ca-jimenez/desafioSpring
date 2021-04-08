@@ -40,6 +40,7 @@ public class ArticleDTO {
         return result;
     }
 
+    // Parse ArticleDTO to csv formatted string
     public String toCsvRow() {
         return String.join(",", name, category, brand, formatPrice(), quantity.toString(), formatShipping(), formatPrestige());
     }

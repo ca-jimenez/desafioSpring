@@ -7,7 +7,10 @@ import java.util.List;
 public interface ArticleRepository {
 
     List<ArticleDTO> getArticleList();
+
     ArticleDTO getArticleById(Long id);
+
     void subtractStock(Long id, Integer quantity);
-    public void updateDatabase();
+
+    void updateDatabase();
 }
