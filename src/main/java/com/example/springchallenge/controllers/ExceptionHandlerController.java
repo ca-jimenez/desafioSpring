@@ -1,9 +1,7 @@
 package com.example.springchallenge.controllers;
 
 import com.example.springchallenge.dtos.ErrorDTO;
-import com.example.springchallenge.exceptions.InsufficientStockException;
-import com.example.springchallenge.exceptions.InvalidArticleException;
-import com.example.springchallenge.exceptions.InvalidFilterException;
+import com.example.springchallenge.exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -15,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ExceptionHandlerController {
 
     private final Integer BAD_REQUEST_STATUS = 400;
+    private final Integer CONFLICT_STATUS = 409;
     private final Integer UNPROCESSABLE_ENTITY_STATUS = 422;
     private final Integer INTERNAL_SERVER_ERROR_STATUS = 500;
 
@@ -29,6 +28,25 @@ public class ExceptionHandlerController {
         ErrorDTO errorDTO = new ErrorDTO("Invalid Article", e.getMessage(), BAD_REQUEST_STATUS);
         return new ResponseEntity<>(errorDTO, HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(value = {InvalidShopingCartException.class})
+    public ResponseEntity<ErrorDTO> InvalidShopingCartExceptionHandler(InvalidShopingCartException e) {
+        ErrorDTO errorDTO = new ErrorDTO("Invalid Shopping Cart ID", e.getMessage(), BAD_REQUEST_STATUS);
+        return new ResponseEntity<>(errorDTO, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(value = {InvalidClientDateException.class})
+    public ResponseEntity<ErrorDTO> InvalidClientDateExceptionHandler(InvalidClientDateException e) {
+        ErrorDTO errorDTO = new ErrorDTO("Invalid Client information", e.getMessage(), BAD_REQUEST_STATUS);
+        return new ResponseEntity<>(errorDTO, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(value = {EmailConflictException.class})
+    public ResponseEntity<ErrorDTO> EmailConflictExceptionHandler(EmailConflictException e) {
+        ErrorDTO errorDTO = new ErrorDTO("Email address already registered", e.getMessage(), CONFLICT_STATUS);
+        return new ResponseEntity<>(errorDTO, HttpStatus.CONFLICT);
+    }
+
 
     @ExceptionHandler(value = {InsufficientStockException.class})
     public ResponseEntity<ErrorDTO> InsufficientStockExceptionHandler(InsufficientStockException e) {

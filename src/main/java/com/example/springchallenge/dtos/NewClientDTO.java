@@ -5,11 +5,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class PurchaseResponseDTO {
+@NoArgsConstructor
+public class NewClientDTO {
 
-    private Long shoppingCartId;
-    private TicketDTO ticket;
-    private StatusDTO statusCode;
+    private String name;
+    private String email;
+    private String province;
 }

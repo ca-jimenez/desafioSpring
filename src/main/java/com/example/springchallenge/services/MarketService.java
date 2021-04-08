@@ -7,11 +7,11 @@ import com.example.springchallenge.dtos.PurchaseResponseDTO;
 import java.util.List;
 import java.util.Map;
 
-public interface ArticleService {
+public interface MarketService {
 
     List<ArticleDTO> getUnfilteredArticles();
 
     List<ArticleDTO> getArticles(Map<String, String> allFilters) throws Exception;
 
-    PurchaseResponseDTO PurchaseArticles(PurchaseRequestDTO articles) throws Exception;
+    PurchaseResponseDTO PurchaseArticles(Long cartId, PurchaseRequestDTO articles) throws Exception;
 }

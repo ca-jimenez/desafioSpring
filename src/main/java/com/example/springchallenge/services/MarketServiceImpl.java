@@ -4,10 +4,12 @@ import com.example.springchallenge.dtos.*;
 import com.example.springchallenge.exceptions.InsufficientStockException;
 import com.example.springchallenge.exceptions.InvalidArticleException;
 import com.example.springchallenge.exceptions.InvalidFilterException;
+import com.example.springchallenge.exceptions.InvalidShopingCartException;
 import com.example.springchallenge.repositories.ArticleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -16,14 +18,16 @@ import java.util.stream.Collectors;
 
 
 @Service
-public class ArticleServiceImpl implements ArticleService {
+public class MarketServiceImpl implements MarketService {
 
     private final ArticleRepository articleRepository;
+    private List<ShoppingCartDTO> shoppingCartsList = new ArrayList<>();
 
     private final AtomicLong ticketIdCounter = new AtomicLong(1);
+    private final AtomicLong shoppingCartIdCounter = new AtomicLong(1);
 
     @Autowired
-    public ArticleServiceImpl(ArticleRepository articleRepository) {
+    public MarketServiceImpl(ArticleRepository articleRepository) {
         this.articleRepository = articleRepository;
     }
 
@@ -55,7 +59,7 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public PurchaseResponseDTO PurchaseArticles(PurchaseRequestDTO articles) throws Exception {
+    public PurchaseResponseDTO PurchaseArticles(Long cartId, PurchaseRequestDTO articles) throws Exception {
 
         List<PurchaseArticleDTO> articleList = articles.getArticles();
 
@@ -83,6 +87,21 @@ public class ArticleServiceImpl implements ArticleService {
             total += (article.getQuantity() * (long) itemInStock.getPrice());
         }
 
+        if (cartId == null) {
+            ShoppingCartDTO shoppingCart = new ShoppingCartDTO(shoppingCartIdCounter.getAndIncrement(), total, articleList);
+            shoppingCartsList.add(shoppingCart);
+            cartId = shoppingCart.getCartId();
+
+        } else {
+            ShoppingCartDTO shoppingCart = getCartById(cartId);
+
+            if (shoppingCart == null)
+                throw new InvalidShopingCartException("Shopping cart number " + cartId + " not found");
+
+            shoppingCart.addItems(articleList, total);
+            total = shoppingCart.getTotal();
+        }
+
         // Update catalog stock
         for (PurchaseArticleDTO article : articleList) {
             articleRepository.subtractStock(article.getProductId(), article.getQuantity());
@@ -93,7 +112,7 @@ public class ArticleServiceImpl implements ArticleService {
         TicketDTO ticket = new TicketDTO(ticketIdCounter.getAndIncrement(), articleList, total);
         StatusDTO status = new StatusDTO(200, "La solicitud de compra se completó con éxito");
 
-        return new PurchaseResponseDTO(ticket, status);
+        return new PurchaseResponseDTO(cartId, ticket, status);
     }
 
     private void validateArticle(PurchaseArticleDTO reqArticle, ArticleDTO catalogArticle) throws InvalidArticleException {
@@ -220,5 +239,12 @@ public class ArticleServiceImpl implements ArticleService {
             default:
                 throw new InvalidFilterException("Order filter accepted values: 0-3");
         }
+    }
+
+    public ShoppingCartDTO getCartById(Long id) {
+        return shoppingCartsList.stream()
+                .filter(a -> a.getCartId().equals(id))
+                .findFirst()
+                .orElse(null);
     }
 }

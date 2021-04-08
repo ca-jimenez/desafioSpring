@@ -1,10 +1,10 @@
 name,category,brand,price,quantity,freeShipping,prestige
 Desmalezadora,Herramientas,Makita,$9.600,0,SI,****
-Taladro,Herramientas,Black & Decker,$12.500,7,SI,****
+Taladro,Herramientas,Black & Decker,$12.500,117,SI,****
 Soldadora,Herramientas,Black & Decker,$7.215,10,SI,***
 Zapatillas Deportivas,Deportes,Nike,$14.000,6,SI,*****
 Zapatillas Deportivas,Deportes,Adidas,$13.650,6,SI,*****
-Camiseta,Deportes,Topper,$2.300,0,NO,***
+Camiseta,Deportes,Topper,$2.300,70,NO,***
 Redmi Note 9,Celulares,Xiaomi,$40.000,15,SI,****
 Smartwatch,Celulares,Noga,$1.900,20,NO,**
 Remera,Indumentaria,Taverniti,$2.300,2,NO,***
