@@ -16,7 +16,6 @@ public class ArticleDTO {
     private Integer price;
     private Integer quantity;
     private Boolean freeShipping;
-    //    private String prestige;
     private Integer prestige;
 
 

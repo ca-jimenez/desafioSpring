@@ -33,29 +33,23 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    //public List<ArticleDTO> getArticles(Map<String, String> allFilters, String name, String category, String brand, Integer price, Boolean freeShipping, Integer prestige) throws Exception {
     public List<ArticleDTO> getArticles(Map<String, String> allFilters) throws Exception {
 
         List<ArticleDTO> catalog = getUnfilteredArticles();
 
-//        if (name != null
-//                || category != null
-//                || brand != null
-//                || price != null
-//                || freeShipping != null
-//                || prestige != null) {
-        if (allFilters.size() > 0 && allFilters.size() < 3) {
+        if (allFilters.size() < 1) {
+
+            return catalog;
+
+        } else if (allFilters.size() <= 2
+                || (allFilters.size() == 3 && allFilters.get("order") != null)) {
 
             validateFilters(allFilters);
-//            return filterArticles(catalog, name, category, brand, price, freeShipping, prestige);
+
             return filterArticles(catalog, allFilters);
 
-        } else if (allFilters.size() > 2 && allFilters.get("order") == null
-                || allFilters.size() > 3) {
-            
-            throw new InvalidFilterException("A maximum of 2 filters can be applied at the same time");
         } else {
-            return catalog;
+            throw new InvalidFilterException("A maximum of 2 filters can be applied at the same time");
         }
     }
 
@@ -139,13 +133,9 @@ public class ArticleServiceImpl implements ArticleService {
 
                 throw new InvalidFilterException("FreeShipping must be boolean");
             }
-
-
         }
-
     }
 
-    //    private List<ArticleDTO> filterArticles(List<ArticleDTO> catalog, String name, String category, String brand, Integer price, Boolean freeShipping, String prestige) throws NoMatchesException {
     private List<ArticleDTO> filterArticles(List<ArticleDTO> catalog, Map<String, String> filters) throws Exception {
 
         String name = filters.get("name");
@@ -179,11 +169,6 @@ public class ArticleServiceImpl implements ArticleService {
         if (prestige != null) {
             catalog = filterByPrestige(catalog, prestige);
         }
-
-
-//        if (catalog.size() < 1) {
-//            throw new NoMatchesException("No articles match the query");
-//        }
 
         if (order != null) {
             catalog = sortArticles(catalog, order);
@@ -234,72 +219,26 @@ public class ArticleServiceImpl implements ArticleService {
                 .collect(Collectors.toList());
     }
 
-//    private List<ArticleDTO> filterByPrestige(List<ArticleDTO> catalog, String filter) {
-//
-//        return catalog.stream().filter(item -> item.getPrestige()
-//                .equalsIgnoreCase(filter))
-//                .collect(Collectors.toList());
-//    }
-
     private List<ArticleDTO> sortArticles(List<ArticleDTO> catalog, Integer order) throws InvalidFilterException {
 
         List<ArticleDTO> sorted;
 
         switch (order) {
             case 0:
-//                Comparator<String> stringComparatorAsc = String::compareToIgnoreCase;
-//                sorted = sortByName(catalog, stringComparatorAsc);
                 sorted = catalog.stream().sorted(Comparator.comparing(ArticleDTO::getName)).collect(Collectors.toList());
                 break;
             case 1:
-//                Comparator<String> stringComparatorDesc = (a, b) -> b.compareToIgnoreCase(a);
-//                sorted = sortByName(catalog, stringComparatorDesc);
                 sorted = catalog.stream().sorted((a, b) -> b.getName().compareToIgnoreCase(a.getName())).collect(Collectors.toList());
                 break;
             case 2:
-//                Comparator<Integer> intComparatorDesc = (a, b) -> b - a;
-//                sorted = sortByPrice(catalog, intComparatorDesc);
                 sorted = catalog.stream().sorted((a, b) -> b.getPrice() - a.getPrice()).collect(Collectors.toList());
                 break;
             case 3:
-//                Comparator<Integer> intComparatorAsc = Comparator.comparingInt(a -> a);
-//                sorted = sortByPrice(catalog, intComparatorAsc);
                 sorted = catalog.stream().sorted(Comparator.comparingInt(ArticleDTO::getPrice)).collect(Collectors.toList());
                 break;
             default:
                 throw new InvalidFilterException("Order filter accepted values: 0-3");
-
         }
         return sorted;
     }
-
-    //--------------------
-
-//    public String convertToCSV(String[] data) {
-////        return String.join(",", data);
-//        return Stream.of(data)
-//                .map(this::escapeSpecialCharacters)
-//                .collect(Collectors.joining(","));
-//    }
-//
-//    public String escapeSpecialCharacters(String data) {
-//        String escapedData = data.replaceAll("\\R", " ");
-//        if (data.contains(",") || data.contains("\"") || data.contains("'")) {
-//            data = data.replace("\"", "\"\"");
-//            escapedData = "\"" + data + "\"";
-//        }
-//        return escapedData;
-//    }
-
-
-//
-//    public void givenDataArray_whenConvertToCSV_thenOutputCreated(List<String[]> dataLines) throws IOException {
-//        File csvOutputFile = new File("copy.csv");
-//        try (PrintWriter pw = new PrintWriter(csvOutputFile)) {
-//            dataLines.stream()
-//                    .map(this::convertToCSV)
-//                    .forEach(pw::println);
-//        }
-////        assertTrue(csvOutputFile.exists());
-//    }
 }

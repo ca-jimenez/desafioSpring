@@ -31,12 +31,15 @@ public class ArticleRepositoryImpl implements ArticleRepository {
 
     @Override
     public ArticleDTO getArticleById(Long id) {
-       return catalog.stream().filter(a -> a.getProductId().equals(id)).findFirst().orElse(null);
+       return catalog.stream()
+               .filter(a -> a.getProductId().equals(id))
+               .findFirst()
+               .orElse(null);
     }
 
     @Override
     public void subtractStock(Long id, Integer quantity) {
-        catalog.get(id.intValue() - 1).subtractQuantity(quantity);
+        getArticleById(id).subtractQuantity(quantity);
     }
 
     @Override
