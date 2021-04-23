@@ -14,12 +14,12 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1")
-public class MarkertController {
+public class MarketController {
 
     private final MarketService marketService;
 
     @Autowired
-    public MarkertController(MarketService marketService) {
+    public MarketController(MarketService marketService) {
         this.marketService = marketService;
     }
 

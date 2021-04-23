@@ -44,4 +44,10 @@ public class ArticleDTO {
     public String toCsvRow() {
         return String.join(",", name, category, brand, formatPrice(), quantity.toString(), formatShipping(), formatPrestige());
     }
+
+    //---------------------
+    @Override
+    public String toString() {
+        return "{\"productId\":" + productId + ", \"name\":\"" + name + "\", \"category\":\"" + category + "\", \"brand\":\"" + brand + "\", \"price\":" + price + ", \"quantity\":" + quantity + ", \"freeShipping\":" + freeShipping + ", \"prestige\":" + prestige + "}";
+    }
 }
